@@ -17,6 +17,9 @@ app.get("/", (req, res) => {
 app.get("/debug-sentry", function mainHandler(req, res) {
   throw new Error("My first Sentry error!");
 });
+app.get("/error", function mainHandler(req, res) {
+  throw new Error("My new first Sentry error!");
+});
 
 // Health Check Routes
 app.get("/health", (req, res) => {
@@ -28,7 +31,7 @@ app.get("/health", (req, res) => {
 app.use("/api/v1", apiRouter);
 
 // Add this after all routes, but before any and other error-handling middlewares are defined
-Sentry.setupExpressErrorHandler(app);
+// Sentry.setupExpressErrorHandler(app);
 
 app.use((req, res) => {
   res.status(404).json({

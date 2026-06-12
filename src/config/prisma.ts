@@ -16,4 +16,8 @@ const prisma = new PrismaClient({ adapter, log: ["query"] });
 //   adapter,
 // });
 
+prisma.$connect().then(() => {
+  console.log("Prisma is connected");
+});
+
 export default prisma;

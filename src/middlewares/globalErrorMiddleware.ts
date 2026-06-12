@@ -9,24 +9,24 @@ const globalErrorMiddleware = (
 ) => {
   req.log?.error(err);
 
-  // Sentry.withScope((scope) => {
-  //   scope.setTag("route", req.originalUrl);
+  Sentry.withScope((scope) => {
+    scope.setTag("route", req.originalUrl);
 
-  //   scope.setExtra("method", req.method);
-  //   scope.setExtra("query", req.query);
-  //   scope.setExtra("params", req.params);
+    scope.setExtra("method", req.method);
+    scope.setExtra("query", req.query);
+    scope.setExtra("params", req.params);
 
-  //   Sentry.captureException(err);
-  // });
-
-  Sentry.captureException(err, {
-    extra: {
-      method: req.method,
-      url: req.originalUrl,
-      params: req.params,
-      query: req.query,
-    },
+    Sentry.captureException(err);
   });
+
+  // Sentry.captureException(err, {
+  //   extra: {
+  //     method: req.method,
+  //     url: req.originalUrl,
+  //     params: req.params,
+  //     query: req.query,
+  //   },
+  // });
 
   if (err.name === "ZOD_ERROR") {
     res.status(500).json({
