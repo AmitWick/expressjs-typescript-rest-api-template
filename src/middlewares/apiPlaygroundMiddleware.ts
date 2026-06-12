@@ -3,7 +3,7 @@ import { generateOpenApiDocument } from "@/openapi/openapi.js";
 import { apiReference } from "@scalar/express-api-reference";
 import "@/openapi/index.js";
 
-const testingMiddleware = (app: Express) => {
+const apiPlaygroundMiddleware = (app: Express) => {
   app.get("/openapi.json", (req, res) => {
     res.json(generateOpenApiDocument());
   });
@@ -16,4 +16,4 @@ const testingMiddleware = (app: Express) => {
   );
 };
 
-export default testingMiddleware;
+export default apiPlaygroundMiddleware;

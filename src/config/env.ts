@@ -13,4 +13,7 @@ export const envSchema = z.object({
   DATABASE_URL: z.string(),
   REDIS_URL: z.string(),
   SENTRY_DSN: z.string(),
+  LOKI_HOST: z.string(),
+  LOKI_USERNAME: z.string(),
+  LOKI_PASSWORD: z.string().startsWith("glc_"),
 });

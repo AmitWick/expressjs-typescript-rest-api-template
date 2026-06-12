@@ -43,7 +43,7 @@ const globalMiddlewares = (app: Express) => {
     autoLogging: false,
   });
 
-  app.use(pino);
+  // app.use(pino);
 
   app.use(rateLimitMiddleware({ type: "IP" }));
 

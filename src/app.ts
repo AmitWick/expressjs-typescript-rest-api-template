@@ -2,23 +2,18 @@ import express from "express";
 import globalMiddlewares from "./middlewares/globalMiddlewares.js";
 import globalErrorMiddleware from "./middlewares/globalErrorMiddleware.js";
 import apiRouter from "./routes/index.js";
-import testingMiddleware from "./middlewares/testingMiddleware.js";
-import * as Sentry from "@sentry/node";
+import register from "./config/prometheus.js";
+import apiTracingMiddleware from "./middlewares/apiTracingMiddleware.js";
+import apiPlaygroundMiddleware from "./middlewares/apiPlaygroundMiddleware.js";
 
 const app = express();
 
 globalMiddlewares(app);
-testingMiddleware(app);
+app.use(apiTracingMiddleware());
+apiPlaygroundMiddleware(app);
 
 app.get("/", (req, res) => {
   res.send("Home Page");
-});
-
-app.get("/debug-sentry", function mainHandler(req, res) {
-  throw new Error("My first Sentry error!");
-});
-app.get("/error", function mainHandler(req, res) {
-  throw new Error("My new first Sentry error!");
 });
 
 // Health Check Routes
@@ -27,11 +22,22 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
+// Prometheus Metrics
+app.get("/metrics", async (req, res) => {
+  res.set("Content-Type", register.contentType);
+  res.end(await register.metrics());
+});
+
+app.get("/debug-sentry", function mainHandler(req, res) {
+  throw new Error("My first Sentry error!");
+});
+
+app.get("/error", function mainHandler(req, res) {
+  throw new Error("My new first Sentry error!");
+});
+
 // All Major Routes
 app.use("/api/v1", apiRouter);
-
-// Add this after all routes, but before any and other error-handling middlewares are defined
-// Sentry.setupExpressErrorHandler(app);
 
 app.use((req, res) => {
   res.status(404).json({

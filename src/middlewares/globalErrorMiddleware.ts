@@ -1,5 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import * as Sentry from "@sentry/node";
+import logger from "@/config/pino.js";
+import { errorsTotal } from "@/config/prometheus.js";
 
 const globalErrorMiddleware = (
   err: Error & { type?: string; code?: string },
@@ -7,16 +9,14 @@ const globalErrorMiddleware = (
   res: Response,
   next: NextFunction,
 ) => {
-  req.log?.error(err);
+  logger.error(err);
 
-  Sentry.withScope((scope) => {
-    scope.setTag("route", req.originalUrl);
+  let statusCode = 500;
+  let errMsg = "Internal Server Error";
 
-    scope.setExtra("method", req.method);
-    scope.setExtra("query", req.query);
-    scope.setExtra("params", req.params);
-
-    Sentry.captureException(err);
+  errorsTotal.inc({
+    route: req.baseUrl + (req.route?.path ?? ""),
+    status: String(statusCode),
   });
 
   // Sentry.captureException(err, {
@@ -29,24 +29,33 @@ const globalErrorMiddleware = (
   // });
 
   if (err.name === "ZOD_ERROR") {
-    res.status(500).json({
-      message: "Check your input field either params, body or query is wrong.",
-    });
+    errMsg = "Check your input field either params, body or query is wrong.";
   }
 
+  if (err.code === "P1000") {
+    errMsg = "There is a Prisma Connection Error. Please check DATABASE_URL";
+  }
   if (err.code === "P1001") {
-    res.status(500).json({
-      message: "There is a Prisma Error. Please try again later",
-    });
+    errMsg = "There is a Prisma Error. Please try again later";
   }
 
   if (err.code === "P2002") {
-    res.status(500).json({
-      message: "Check your input carefully. Field must be unique",
-    });
+    errMsg = "Check your input carefully. Field must be unique";
   }
 
-  res.status(500).json(err);
+  Sentry.withScope((scope) => {
+    scope.setTag("route", req.originalUrl);
+
+    scope.addBreadcrumb({ message: errMsg, level: "info" });
+    scope.setExtra("message", errMsg);
+    scope.setExtra("method", req.method);
+    scope.setExtra("query", req.query);
+    scope.setExtra("params", req.params);
+
+    Sentry.captureException(err);
+  });
+
+  res.status(statusCode).json({ message: errMsg, err });
 };
 
 export default globalErrorMiddleware;
