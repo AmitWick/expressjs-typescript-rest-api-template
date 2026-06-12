@@ -3,6 +3,12 @@ import Redis from "ioredis";
 
 const redisClient = new Redis.default(environment.REDIS_URL);
 
-// console.log("Redis Client", redisClient);
+redisClient.on("connect", () => {
+  console.log("Redis is connected.");
+});
+
+redisClient.on("error", () => {
+  console.log("Error in Redis connection");
+});
 
 export default redisClient;
